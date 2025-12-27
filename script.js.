@@ -1,0 +1,113 @@
+let scene, camera, renderer, player;
+let obstacles = [];
+let score = 0;
+let speed = 0.2; // Стартовая скорость
+let gameActive = true;
+
+function init() {
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, 0.05);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.5, 6);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Свет
+    const light = new THREE.PointLight(0x00ffff, 1, 100);
+    light.position.set(0, 5, 5);
+    scene.add(light);
+
+    // Игрок
+    const geometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+    player = new THREE.Mesh(geometry, material);
+    scene.add(player);
+
+    // Сетка (пол)
+    const grid = new THREE.GridHelper(200, 40, 0xff00ff, 0x222222);
+    grid.position.y = -0.5;
+    scene.add(grid);
+
+    setupControls();
+    spawnObstacle();
+    animate();
+}
+
+// Управление: Клавиатура + Кнопки
+function setupControls() {
+    const moveLeft = () => { if(player.position.x > -4) player.position.x -= 1; };
+    const moveRight = () => { if(player.position.x < 4) player.position.x += 1; };
+
+    // Слушатели для кнопок
+    document.getElementById('leftBtn').addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft(); });
+    document.getElementById('rightBtn').addEventListener('touchstart', (e) => { e.preventDefault(); moveRight(); });
+    
+    // Для ПК (кнопки мышкой)
+    document.getElementById('leftBtn').addEventListener('click', moveLeft);
+    document.getElementById('rightBtn').addEventListener('click', moveRight);
+
+    // Клавиатура
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') moveLeft();
+        if (e.key === 'ArrowRight' || e.key === 'd') moveRight();
+    });
+}
+
+function spawnObstacle() {
+    if (!gameActive) return;
+
+    const geom = new THREE.BoxGeometry(1, 1, 1);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const obstacle = new THREE.Mesh(geom, mat);
+    
+    obstacle.position.z = -60;
+    obstacle.position.x = (Math.random() - 0.5) * 10;
+    
+    scene.add(obstacle);
+    obstacles.push(obstacle);
+    
+    // Время между появлением новых препятствий уменьшается с ростом скорости
+    let nextSpawn = Math.max(200, 1000 - (speed * 100)); 
+    setTimeout(spawnObstacle, nextSpawn);
+}
+
+function animate() {
+    if (!gameActive) return;
+    requestAnimationFrame(animate);
+
+    // Плавное ускорение игры каждые несколько кадров
+    speed += 0.0001; 
+
+    obstacles.forEach((obj, index) => {
+        obj.position.z += speed;
+
+        // Коллизия (столкновение)
+        if (obj.position.distanceTo(player.position) < 0.8) {
+            gameActive = false;
+            alert("GAME OVER! Твой счет: " + score);
+            location.reload();
+        }
+
+        // Удаление пройденных кубов
+        if (obj.position.z > 10) {
+            scene.remove(obj);
+            obstacles.splice(index, 1);
+            score++;
+            document.getElementById('score').innerText = `Score: ${score} | Speed: ${speed.toFixed(2)}`;
+        }
+    });
+
+    renderer.render(scene, camera);
+}
+
+// Адаптация под размер экрана
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+init();
