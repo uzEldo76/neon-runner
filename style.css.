@@ -1,0 +1,42 @@
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    background: #000; 
+    font-family: Arial, sans-serif;
+    user-select: none; /* Чтобы текст не выделялся при нажатиях */
+}
+
+#ui {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    color: #0ff;
+    font-size: 24px;
+    z-index: 10;
+}
+
+#controls {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    z-index: 20;
+}
+
+button {
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 255, 255, 0.2);
+    border: 2px solid #0ff;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    outline: none;
+    touch-action: manipulation; /* Убирает задержку клика на мобильных */
+}
+
+button:active {
+    background: rgba(0, 255, 255, 0.5);
+}
